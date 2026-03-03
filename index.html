@@ -2,110 +2,97 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ELITE STARS SHOP</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background-color: #000000; color: #ffffff; font-family: -apple-system, sans-serif; padding: 15px; margin: 0; }
-        .header { text-align: center; padding: 20px 0; color: #ffd700; font-size: 22px; font-weight: bold; letter-spacing: 1px; }
+        :root { --gold: #f1c40f; --bg: #000; --card: #111; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; padding: 15px; margin: 0; }
+        .header { text-align: center; padding: 20px; color: var(--gold); font-size: 24px; font-weight: bold; }
         
-        .category-btn {
-            background: #111; border: 1px solid #ffd70033; color: #ffd700; width: 100%;
-            padding: 18px; border-radius: 12px; font-size: 16px; font-weight: bold;
-            margin-bottom: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-        }
+        /* ستايل القوائم المنسدلة */
+        .category { background: var(--card); border: 1px solid #222; border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
+        .cat-head { padding: 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; color: var(--gold); }
+        .cat-body { display: none; padding: 0 10px 10px 10px; background: #080808; border-top: 1px solid #222; }
         
-        .category-content { display: none; background: #080808; border-radius: 0 0 12px 12px; margin-top: -12px; margin-bottom: 15px; padding: 5px; border: 1px solid #ffd70033; border-top: none; }
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 15px 5px; border-bottom: 1px solid #1a1a1a; }
+        .item:last-child { border-bottom: none; }
         
-        .offer-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #1a1a1a; }
-        .price-tag { color: #ffd700; font-weight: bold; font-size: 14px; }
-        
-        .btn-group { display: flex; gap: 8px; }
-        .method-btn { background: #ffd700; color: #000; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 12px; }
-        .flexy-btn { background: #ffffff; }
+        .price { color: var(--gold); font-weight: bold; margin-left: 10px; }
+        .buy-btns { display: flex; gap: 5px; }
+        .btn { border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .btn-ccp { background: #222; color: #fff; }
+        .btn-flexy { background: var(--gold); color: #000; }
 
-        .payment-box { display: none; text-align: center; padding: 20px; border: 1px dashed #ffd700; border-radius: 15px; margin-top: 20px; background: #0a0a0a; }
-        .upload-btn { background: #ffd700; color: #000; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; margin-top: 10px; border: none; }
-        .hidden { display: none; }
+        /* واجهة الدفع (تخرج من التحت) */
+        .pay-sheet { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #111; border-top: 3px solid var(--gold); padding: 25px; border-radius: 20px 20px 0 0; text-align: center; z-index: 100; }
+        .up-box { border: 2px dashed #444; padding: 20px; border-radius: 12px; color: var(--gold); margin: 15px 0; }
     </style>
 </head>
 <body>
-    <div class="header">ELITE STARS SHOP</div>
+    <div class="header">ELITE STARS SHOP ⚜️</div>
 
-    <button class="category-btn" onclick="toggleMenu('stars')">⭐ Telegram Stars <span>▼</span></button>
-    <div id="stars" class="category-content">
-        <div class="offer-item">
-            <span>50 نجمة</span>
-            <div class="btn-group">
-                <span class="price-tag">250 DA</span>
-                <button class="method-btn" onclick="pay('50 Stars', 'CCP')">CCP</button>
-                <button class="method-btn flexy-btn" onclick="pay('50 Stars', 'Flexy')">Flexy</button>
-            </div>
-        </div>
-        </div>
-
-    <button class="category-btn" onclick="toggleMenu('premium')">💎 Telegram Premium <span>▼</span></button>
-    <div id="premium" class="category-content">
-        <div class="offer-item">
-            <span>3 أشهر</span>
-            <div class="btn-group">
-                <span class="price-tag">2800 DA</span>
-                <button class="method-btn" onclick="pay('Premium 3M', 'CCP')">CCP</button>
-                <button class="method-btn flexy-btn" onclick="pay('Premium 3M', 'Flexy')">Flexy</button>
-            </div>
-        </div>
+    <div class="category">
+        <div class="cat-head" onclick="toggle(this)">⭐ شحن النجوم (Stars) <span>▼</span></div>
+        <div class="cat-body" id="stars-body"></div>
     </div>
 
-    <div id="pay-box" class="payment-box">
-        <p id="pay-text" style="color: #ffd700; font-size: 14px;"></p>
-        <div id="ccp-ui" class="hidden">
-            <input type="file" id="fileIn" accept="image/*" class="hidden" onchange="sendImg(event)">
-            <button class="upload-btn" onclick="document.getElementById('fileIn').click()">📸 إرسال صورة الوصل</button>
+    <div class="category">
+        <div class="cat-head" onclick="toggle(this)">💎 تليجرام بريميوم <span>▼</span></div>
+        <div class="cat-body" id="prem-body"></div>
+    </div>
+
+    <div id="pay-sheet" class="pay-sheet">
+        <h3 id="item-name"></h3>
+        <p id="instr" style="font-size: 13px; color: #888;"></p>
+        <div id="ccp-area" style="display:none">
+            <input type="file" id="file" style="display:none" onchange="sendImg(event)">
+            <div class="up-box" onclick="document.getElementById('file').click()">📸 ارفع صورة الوصل</div>
         </div>
-        <div id="flexy-ui" class="hidden">
-            <button class="upload-btn" style="background:#fff" onclick="sendFlexy()">✅ تأكيد طلب الفليكسي</button>
-        </div>
+        <button id="flexy-btn" class="btn btn-flexy" style="display:none; width:100%; padding:15px;" onclick="sendFlexy()">✅ تأكيد الفليكسي</button>
+        <button onclick="closePay()" style="background:none; border:none; color:red; margin-top:15px;">إلغاء</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp; tg.expand();
-        let curItem = ""; 
-        const PHONE = "06XXXXXXXX"; // حط رقمك هنا
+        let cur = ""; const NUM = "0549894647";
 
-        function toggleMenu(id) {
-            let m = document.getElementById(id);
-            m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+        const stars = [{n:"50", p:"250"}, {n:"100", p:"450"}, {n:"200", p:"850"}, {n:"250", p:"1100"}, {n:"500", p:"2100"}, {n:"1000", p:"4100"}];
+        const prems = [{n:"3 أشهر", p:"2800"}, {n:"6 أشهر", p:"5200"}, {n:"12 شهر (عام)", p:"9800"}];
+
+        function toggle(el) {
+            let body = el.nextElementSibling;
+            body.style.display = (body.style.display === 'block') ? 'none' : 'block';
         }
 
-        function pay(item, method) {
-            curItem = item;
-            document.getElementById('pay-box').style.display = 'block';
-            if(method === 'CCP') {
-                document.getElementById('pay-text').innerText = "ارفع صورة وصل بريدي موب لطلب " + item;
-                document.getElementById('ccp-ui').classList.remove('hidden');
-                document.getElementById('flexy-ui').classList.add('hidden');
+        function fill(list, id, type) {
+            const container = document.getElementById(id);
+            list.forEach(i => {
+                container.innerHTML += `<div class="item"><span>${i.n}</span><div class="buy-btns"><span class="price">${i.p} DA</span><button class="btn btn-ccp" onclick="openP('${i.n}','CCP')">CCP</button><button class="btn btn-flexy" onclick="openP('${i.n}','Flexy')">Flexy</button></div></div>`;
+            });
+        }
+        fill(stars, 'stars-body'); fill(prems, 'prem-body');
+
+        function openP(it, m) {
+            cur = it; document.getElementById('pay-sheet').style.display='block';
+            document.getElementById('item-name').innerText = it;
+            if(m==='CCP'){ 
+                document.getElementById('instr').innerText="ارفع الوصل هنا";
+                document.getElementById('ccp-area').style.display='block'; document.getElementById('flexy-btn').style.display='none';
             } else {
-                document.getElementById('pay-text').innerText = "فليكسي لـ " + PHONE + " ثم اضغط تأكيد لطلب " + item;
-                document.getElementById('flexy-ui').classList.remove('hidden');
-                document.getElementById('ccp-ui').classList.add('hidden');
+                document.getElementById('instr').innerText="فليكسي لـ " + NUM;
+                document.getElementById('flexy-btn').style.display='block'; document.getElementById('ccp-area').style.display='none';
             }
         }
+        function closePay() { document.getElementById('pay-sheet').style.display='none'; }
 
         function sendImg(e) {
-            const f = e.target.files[0];
-            const r = new FileReader();
-            r.onloadend = function() {
-                tg.sendData(JSON.stringify({p: curItem, m: "CCP", img: r.result.split(',')[1]}));
+            const r = new FileReader(); r.onloadend = () => {
+                tg.sendData(JSON.stringify({p:cur, m:"CCP", img:r.result.split(',')[1]}));
                 tg.close();
-            }
-            r.readAsDataURL(f);
+            }; r.readAsDataURL(e.target.files[0]);
         }
-
-        function sendFlexy() {
-            tg.sendData(JSON.stringify({p: curItem, m: "Flexy"}));
-            tg.close();
-        }
+        function sendFlexy() { tg.sendData(JSON.stringify({p:cur, m:"Flexy"})); tg.close(); }
     </script>
 </body>
 </html>
-
